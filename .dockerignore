@@ -1,0 +1,39 @@
+# Ignore Python bytecode
+
+_.pyc
+_.pyo
+\*\*/**pycache**/
+
+# Ignore virtual environments
+
+venv/
+env/
+ENV/
+Lib/
+Scripts/
+pyvenv.cfg
+
+# Ignore IDE/editor-specific files
+
+.vscode/
+.idea/
+
+# Ignore OS-specific files
+
+.DS_Store
+Thumbs.db
+
+# Ignore environment variables and configuration files
+
+.env
+
+# Ignore Docker-specific files
+
+.dockerignore
+
+# Ignore `.gitignore` itself if necessary (optional, usually unnecessary)
+
+.gitignore
+
+# Ignore the mariadb data directory
+mariadb_data/

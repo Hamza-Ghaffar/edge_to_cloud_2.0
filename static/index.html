@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="googlefonts.css" />
+    <link rel="shortcut icon" href="#" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Cloud and Edge</title>
+  </head>
+
+  <body>
+    <section id="content">
+      <nav>
+        <h1>Cloud And Edge Computing</h1>
+        <label class="timer">Auto Refresh in: </label>
+        <div class="timer" id="timerval"></div>
+      </nav>
+      <main>
+        <div class="Charts">
+          <div class="head">
+            <h3>Dashboard</h3>
+          </div>
+          <canvas id="detectionChart"></canvas>
+        </div>
+      </main>
+    </section>
+
+    <script>
+      $(document).ready(function () {
+        loadChart();
+        timer();
+      });
+
+      function timer() {
+        let countdown = 10;
+        const timerInterval = setInterval(function () {
+          $("#timerval").text(countdown);
+          countdown--;
+          if (countdown < 0) {
+            clearInterval(timerInterval);
+            location.reload(); // Reload the chart data after 10 seconds
+          }
+        }, 1000);
+      }
+
+      function loadChart() {
+        $.ajax({
+          url: "/getAll",
+          method: "GET",
+          dataType: "json",
+          success: function (jsonData) {
+            console.log("Fetched Data: ", jsonData);
+
+            const detectionTimes = [
+              ...new Set(
+                jsonData.flatMap((item) =>
+                  item.data.map((d) => d.detectionTime)
+                )
+              ),
+            ];
+
+            const data = jsonData.map((item) => {
+              return {
+                label: item.camId,
+                data: detectionTimes.map((time) => {
+                  const entry = item.data.find((d) => d.detectionTime === time);
+                  return entry ? entry.detections : null;
+                }),
+                fill: false,
+              };
+            });
+
+            const ctx = $("#detectionChart")[0].getContext("2d");
+            if (window.chart) {
+              window.chart.destroy(); // Destroy the previous chart instance before creating a new one
+            }
+
+            window.chart = new Chart(ctx, {
+              type: "line",
+              data: {
+                labels: detectionTimes,
+                datasets: data,
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "top",
+                  },
+                  title: {
+                    display: true,
+                    text: "Detections over time",
+                  },
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: "Detection Time",
+                    },
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: "Detection Count",
+                    },
+                  },
+                },
+              },
+            });
+          },
+          error: function (xhr, status, error) {
+            console.error("Error fetching data:", error);
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

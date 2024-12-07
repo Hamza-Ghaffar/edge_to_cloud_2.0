@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloud-app-2.0
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env # Ensure this file exists and is loaded correctly
+    depends_on:
+      - maria_db_2.0
+    networks:
+      - cloud-network_2.0
+
+  maria_db_2.0:
+    image: mariadb:10.5
+    container_name: cloud-db-2.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3309:3306" # Port mapping for MariaDB
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
+      - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cloud-network_2.0
+
+volumes:
+  mariadb_data:
+
+networks:
+  cloud-network_2.0:
+    driver: bridge
