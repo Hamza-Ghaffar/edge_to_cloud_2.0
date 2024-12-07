@@ -5,8 +5,6 @@
 
 A three-layer architecture system to detect, process, store, and visualize real-time detection data from cameras using AI models, edge computing, and cloud technologies.
 
----
-![Activity Diagram](https://github.com/user-attachments/assets/6ae178ac-f6ea-4515-af17-b1cd7b3cdaea)
 
 ## 🚀 **Project Overview**
 ![image](https://github.com/user-attachments/assets/b94fb498-d1e0-43d9-b29d-8a64b10d3ca4)
@@ -29,7 +27,7 @@ The **Edge-to-Cloud 2.0** project demonstrates an AI-powered, three-layer archit
    - Serves the data to a front-end dashboard for visualization.
 
 ---
-![Component Diagram](https://github.com/user-attachments/assets/58c097c1-0922-437d-b1bc-c4310ff755dc)
+
 
 ## 📂 **Project Structure**
 
