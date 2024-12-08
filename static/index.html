@@ -1,123 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Local CSS -->
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="googlefonts.css" />
-    <link rel="shortcut icon" href="#" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <title>Cloud and Edge</title>
-  </head>
+<!--Template from https://github.com/fajarnurwahid/adminhub/blob/master/index.html-->
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- local CSS and Java script files-->
+	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="googlefonts.css">
+	<link rel="shortcut icon" href="#">
+	<!--Library for creating charts-->
+	<script src="chart.js"></script>
+	<script src="jquery-3.6.4.min.js"></script>
 
-  <body>
-    <section id="content">
-      <nav>
-        <h1>Cloud And Edge Computing</h1>
-        <label class="timer">Auto Refresh in: </label>
-        <div class="timer" id="timerval"></div>
-      </nav>
-      <main>
-        <div class="Charts">
-          <div class="head">
-            <h3>Dashboard</h3>
-          </div>
-          <canvas id="detectionChart"></canvas>
-        </div>
-      </main>
-    </section>
+	<title>Cloud and Edge</title>
+</head>
 
-    <script>
-      $(document).ready(function () {
-        loadChart();
-        timer();
-      });
+<body>
+	<!-- CONTENT -->
+	<section id="content">
+		<!--For navigation, but just have only page. It represent a header for our page-->
+		<nav>
+			<h1>Cloud And Edge Computing</h1>
+			<label class="timer">Auto Refresh in: </label>
+			<!--We just create a div without content. The countdown value is filled in by javascript-->
+			<div class="timer" id="timerval"></div>
+			<!--Toggle switch to enable/disable timer.-->
+			<input type="checkbox" id="switch-mode" hidden>
+			<label for="switch-mode" class="switch-mode"></label>
+		</nav>
+		<!--Main content to load the line plot-->
+		<main>
+			<div class="Charts">
+				<div class="head">
+					<h3>Dashboard</h3>
+				</div>
+				<!--Container to load the plot-->
+				<canvas id="detectionChart"></canvas>
+			</div>
+		</main>
+	</section>
 
-      function timer() {
-        let countdown = 10;
-        const timerInterval = setInterval(function () {
-          $("#timerval").text(countdown);
-          countdown--;
-          if (countdown < 0) {
-            clearInterval(timerInterval);
-            location.reload(); // Reload the chart data after 10 seconds
-          }
-        }, 1000);
-      }
+	<!-- CONTENT -->
+	<script>
+		// Flag to set or unset the timer 
+		var disableTimer = false;
 
-      function loadChart() {
-        $.ajax({
-          url: "/getAll",
-          method: "GET",
-          dataType: "json",
-          success: function (jsonData) {
-            console.log("Fetched Data: ", jsonData);
+		$(document).ready(function () {
+			loadChart();
+			timer();
+			loadToggleTimer();
+		});
 
-            const detectionTimes = [
-              ...new Set(
-                jsonData.flatMap((item) =>
-                  item.data.map((d) => d.detectionTime)
-                )
-              ),
-            ];
+		// Prepares the toggle switch to set or unset the timer
+		function loadToggleTimer() {
+			$("#switch-mode").click(function () {
+				disableTimer = !disableTimer;
+			});
+		}
 
-            const data = jsonData.map((item) => {
-              return {
-                label: item.camId,
-                data: detectionTimes.map((time) => {
-                  const entry = item.data.find((d) => d.detectionTime === time);
-                  return entry ? entry.detections : null;
-                }),
-                fill: false,
-              };
-            });
+		// Timer function to auto refresh the page
+		function timer() {
+			// After 10 seconds, we want to refresh the page. Change the value if you want to increase the countdown
+			let countdown = 10;
+			// A recursive function to decrement the countdown value
+			const timerInterval = setInterval(function () {
+				if (!disableTimer) {
+					$("#timerval").text(countdown);
+					countdown--;
+					if (countdown < 0 && !disableTimer) {
+						clearInterval(timerInterval);
+						location.reload();
+					}
+				}
+			}, 1000);
+		}
 
-            const ctx = $("#detectionChart")[0].getContext("2d");
-            if (window.chart) {
-              window.chart.destroy(); // Destroy the previous chart instance before creating a new one
-            }
+		// Calls the rest api to fetch the json data as a dictionary (key = cameraId, value = list of detections)
+		function loadChart() {
+			// asynchronous javascript and xml
+			$.ajax({
+				url: '/getAll',
+				method: 'GET',
+				dataType: 'json',
+				success: function (jsonData) {
+					// Json data is an array of json objects
+					// We first try to fetch the detections times from the json objects for the x-axis.
+					// .flatMap() is an array method that first maps each element to an array, then flattens the result by one level.
+					// item.data.map(d => d.detectionTime) extracts the detection time from the json objects, after flattening 
+					// Set removes duplicates, and finally, returns an array of detection times
+					const detectionTimes = Array.from(new Set(jsonData.flatMap(item => item.data.map(d => d.detectionTime))));
 
-            window.chart = new Chart(ctx, {
-              type: "line",
-              data: {
-                labels: detectionTimes,
-                datasets: data,
-              },
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: {
-                    position: "top",
-                  },
-                  title: {
-                    display: true,
-                    text: "Detections over time",
-                  },
-                },
-                scales: {
-                  x: {
-                    title: {
-                      display: true,
-                      text: "Detection Time",
-                    },
-                  },
-                  y: {
-                    title: {
-                      display: true,
-                      text: "Detection Count",
-                    },
-                  },
-                },
-              },
-            });
-          },
-          error: function (xhr, status, error) {
-            console.error("Error fetching data:", error);
-          },
-        });
-      }
-    </script>
-  </body>
+					// We try to now now get the data in the form of key (camId) and values (detections per detection time)
+					// Result is a data set
+					const data = jsonData.map(item => {
+						return {
+							label: item.camId,
+							data: detectionTimes.map(time => {
+								const entry = item.data.find(d => d.detectionTime === time);
+								return entry ? entry.detections : null;
+							}),
+							fill: false
+						};
+					});
+					// Get the corresponding html element to render the plot.
+					const ctx = $('#detectionChart')[0].getContext('2d');
+					// Create the chart by passing in the html element location
+					chart = new Chart(ctx, {
+						type: 'line', // line plot
+						data: {
+							labels: detectionTimes,
+							datasets: data
+						},
+						options: {
+							responsive: true,
+							plugins: {
+								legend: {
+									position: 'top'
+								},
+								title: {
+									display: true,
+									text: 'Detections over time'
+								}
+							},
+							scales: {
+								x: {
+									title: {
+										display: true,
+										text: 'Detection Time'
+									}
+								},
+								y: {
+									title: {
+										display: true,
+										text: 'Detection Count'
+									}
+								}
+							}
+						}
+					});
+				},
+				error: function (xhr, status, error) {
+					console.error('Error fetching data:', error);
+				}
+			});
+		}
+	</script>
+</body>
+
 </html>
