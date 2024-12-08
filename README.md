@@ -58,6 +58,8 @@ Detections	INT	Count of detections.
 👥 Contributors
 Hamza Ghaffar - GitHub
 Ruth Dunthuluri
+Atash Afzon Ahmad
+Metaliaj Maleni
 
 Special thanks to the Cloud Team, ML Team, and all contributors who helped build this project.
 
