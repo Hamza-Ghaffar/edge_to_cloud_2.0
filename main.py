@@ -90,8 +90,9 @@ async def push_detections(request: Request):
     try:
         connection = mariadb.connect(**db_connection)
         cursor = connection.cursor()
+        dataItems = json.loads(data)
 
-        for key, value in data.items():
+        for key, value in dataItems.items():
             logger.debug(f"Inserting data for CameraId: {key}, Detections: {value}")
             cursor.execute('INSERT INTO camera (CameraId, Detections) VALUES (?, ?)', (key, value))
 
